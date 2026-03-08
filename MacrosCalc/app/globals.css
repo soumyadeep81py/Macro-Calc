@@ -1,0 +1,97 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #F7F7F7;
+  --primary: #FFD600;
+  --accent-orange: #FF4D00;
+  --accent-blue: #2979FF;
+  --black: #000000;
+  --white: #FFFFFF;
+}
+
+@theme inline {
+  --color-background: var(--bg);
+  --color-foreground: var(--black);
+  --color-primary: var(--primary);
+  --color-accent-orange: var(--accent-orange);
+  --color-accent-blue: var(--accent-blue);
+}
+
+body {
+  background: var(--bg);
+  color: var(--black);
+  font-family: 'Space Grotesk', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Neo-Brutalist utilities */
+.border-3 {
+  border-width: 3px;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg);
+  border-left: 3px solid var(--black);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border: 2px solid var(--black);
+}
+
+/* Progress bar animation */
+@keyframes fillProgress {
+  from { width: 0%; }
+}
+
+.animate-fill {
+  animation: fillProgress 0.8s ease-out forwards;
+}
+
+/* Card hover lift */
+.card-hover {
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.card-hover:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 10px 10px 0px black;
+}
+
+/* Remove arrows from number inputs */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* Nav link styles */
+.nav-link {
+  position: relative;
+  transition: all 0.15s;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 4px;
+  background: var(--primary);
+  transition: width 0.2s;
+}
+
+.nav-link:hover::after,
+.nav-link.active::after {
+  width: 100%;
+}
