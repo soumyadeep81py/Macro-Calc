@@ -926,5 +926,21 @@
     "carbs": 14.4,
     "fat": 4.5,
     "category": "snacks"
+  },
+  {
+    "name": "soyabean",
+    "calories_per_100g": 446,
+    "protein": 36,
+    "carbs": 30,
+    "fat": 20,
+    "category": "lentils"
+  },
+  {
+    "name": "soyabean (whole)",
+    "calories_per_100g": 446,
+    "protein": 36,
+    "carbs": 30,
+    "fat": 20,
+    "category": "lentils"
   }
 ]
