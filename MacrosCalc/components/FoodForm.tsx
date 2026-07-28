@@ -12,6 +12,8 @@ import { useAuth } from '@/components/AuthProvider';
 export default function FoodForm() {
   const [input, setInput] = useState('');
   const [parsed, setParsed] = useState<ParsedFood | null>(null);
+  // Separate editable weight so user can tweak it after parsing
+  const [editableWeight, setEditableWeight] = useState<number>(0);
   const [suggestions, setSuggestions] = useState<FoodItem[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [addedAnimation, setAddedAnimation] = useState(false);
@@ -31,6 +33,8 @@ export default function FoodForm() {
     if (input.length > 0) {
       const result = parseFoodInput(input, customFoods);
       setParsed(result);
+      // Sync editable weight to the newly parsed weight
+      if (result) setEditableWeight(result.weightGrams);
 
       // Get search suggestions from raw food name
       const words = input.trim().split(/\s+/);
@@ -42,25 +46,27 @@ export default function FoodForm() {
       setShowSuggestions(results.length > 0 && !result);
     } else {
       setParsed(null);
+      setEditableWeight(0);
       setSuggestions([]);
       setShowSuggestions(false);
     }
-  }, [input]);
+  }, [input, customFoods]);
 
   const handleAdd = async () => {
     if (!parsed || !user) return;
     setIsSubmitting(true);
-    
+
+    const weight = editableWeight > 0 ? editableWeight : parsed.weightGrams;
     const isWhole = parsed.food.name.endsWith('(whole)');
-    const multiplier = isWhole ? parsed.weightGrams : (parsed.weightGrams / 100);
-    const calories = calculateCalories(parsed.weightGrams, parsed.food.calories_per_100g, isWhole);
+    const multiplier = isWhole ? weight : (weight / 100);
+    const calories = calculateCalories(weight, parsed.food.calories_per_100g, isWhole);
     const protein = Math.round(multiplier * parsed.food.protein * 10) / 10;
     const carbs = Math.round(multiplier * parsed.food.carbs * 10) / 10;
     const fat = Math.round(multiplier * parsed.food.fat * 10) / 10;
 
     await addFoodLog(user.id, {
       foodName: parsed.food.name,
-      weightGrams: parsed.weightGrams,
+      weightGrams: weight,
       calories,
       protein,
       carbs,
@@ -72,6 +78,7 @@ export default function FoodForm() {
 
     setInput('');
     setParsed(null);
+    setEditableWeight(0);
     setIsSubmitting(false);
     refresh();
     inputRef.current?.focus();
@@ -88,11 +95,13 @@ export default function FoodForm() {
     }
   };
 
+  // Live-calculated values based on editable weight
+  const weight = editableWeight > 0 ? editableWeight : (parsed?.weightGrams ?? 0);
   const isWhole = parsed ? parsed.food.name.endsWith('(whole)') : false;
   const calculatedCalories = parsed
-    ? calculateCalories(parsed.weightGrams, parsed.food.calories_per_100g, isWhole)
+    ? calculateCalories(weight, parsed.food.calories_per_100g, isWhole)
     : 0;
-  const multiplier = parsed ? (isWhole ? parsed.weightGrams : parsed.weightGrams / 100) : 0;
+  const multiplier = parsed ? (isWhole ? weight : weight / 100) : 0;
 
   return (
     <Card className="relative">
@@ -101,7 +110,7 @@ export default function FoodForm() {
       <div className="relative">
         <Input
           ref={inputRef}
-          placeholder='Try "2 eggs" or "200g rice" or "1 plate biryani"'
+          placeholder='Try "2 eggs" or "150 soya" or "200g rice" or "1 roti"'
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onFocus={() => suggestions.length > 0 && !parsed && setShowSuggestions(true)}
@@ -128,19 +137,35 @@ export default function FoodForm() {
         )}
       </div>
 
-      {/* Parsed preview */}
+      {/* Parsed preview with editable weight */}
       {parsed && (
         <div className="mt-4 p-4 bg-[#F7F7F7] border-3 border-black">
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <div>
-              <span className="font-bold capitalize text-lg">{parsed.food.name.replace(' (whole)', '')}</span>
-              <span className="ml-2 text-sm opacity-70">{parsed.weightGrams}{isWhole ? ' whole' : 'g'}</span>
-            </div>
+          <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
+            <span className="font-bold capitalize text-lg">
+              {parsed.food.name.replace(' (whole)', '')}
+            </span>
             <div className="font-mono text-2xl font-bold text-[#FF4D00]">
               {calculatedCalories} kcal
             </div>
           </div>
-          <div className="flex gap-4 mt-2 text-sm font-mono">
+
+          {/* Editable weight row */}
+          <div className="flex items-center gap-2 mb-3">
+            <label className="text-sm font-bold uppercase tracking-wide opacity-70 shrink-0">
+              {isWhole ? 'Count' : 'Grams'}
+            </label>
+            <input
+              type="number"
+              min="1"
+              step={isWhole ? '1' : '5'}
+              value={editableWeight || ''}
+              onChange={(e) => setEditableWeight(parseFloat(e.target.value) || 0)}
+              className="border-3 border-black px-3 py-1.5 text-lg font-mono font-bold w-28 bg-white focus:outline-none focus:ring-4 focus:ring-[#FFD600] transition-all"
+            />
+            <span className="text-sm font-bold opacity-60">{isWhole ? 'pcs' : 'g'}</span>
+          </div>
+
+          <div className="flex gap-4 text-sm font-mono opacity-70">
             <span>P: {Math.round(multiplier * parsed.food.protein * 10) / 10}g</span>
             <span>C: {Math.round(multiplier * parsed.food.carbs * 10) / 10}g</span>
             <span>F: {Math.round(multiplier * parsed.food.fat * 10) / 10}g</span>
@@ -151,7 +176,7 @@ export default function FoodForm() {
       <div className="mt-4">
         <Button
           onClick={handleAdd}
-          disabled={!parsed || isSubmitting}
+          disabled={!parsed || isSubmitting || editableWeight <= 0}
           className={`w-full ${!parsed ? 'opacity-50 cursor-not-allowed' : ''} ${addedAnimation ? 'bg-green-400' : ''}`}
         >
           {addedAnimation ? '✓ Added!' : isSubmitting ? 'Adding...' : '+ Add Food'}

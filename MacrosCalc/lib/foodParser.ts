@@ -151,13 +151,16 @@ export function parseFoodInput(input: string, customFoods: CustomFood[] = []): P
     }
 
     // Check if the whole rest is a food with known unit weight
-    // e.g. "2 eggs" \u2192 eggs has unit weight 50g
+    // e.g. "2 eggs" → eggs has unit weight 50g
+    // If NO unit weight exists, treat the number directly as grams
+    // e.g. "150 soya" → 150g, "200 rice" → 200g
     const food = findFood(rest, customFoods);
     if (food) {
-      const unitWeight = UNIT_WEIGHTS[rest] || UNIT_WEIGHTS[words[0]] || 100;
+      const unitWeight = UNIT_WEIGHTS[rest] || UNIT_WEIGHTS[words[0]];
       return {
         food,
-        weightGrams: Math.round(quantity * unitWeight),
+        // Has a known unit (egg=50g, roti=40g) → multiply; otherwise number IS the grams
+        weightGrams: unitWeight ? Math.round(quantity * unitWeight) : Math.round(quantity),
         originalInput: input,
       };
     }
