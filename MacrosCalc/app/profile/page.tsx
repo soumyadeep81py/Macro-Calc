@@ -146,22 +146,25 @@ export default function ProfilePage() {
           <Input
             label="Weight (kg)"
             type="number"
-            value={profile.weight}
+            value={profile.weight || ''}
             onChange={(e) => setProfile((p) => ({ ...p, weight: parseFloat(e.target.value) || 0 }))}
+            onFocus={(e) => e.target.select()}
             id="profile-weight"
           />
           <Input
             label="Height (cm)"
             type="number"
-            value={profile.height}
+            value={profile.height || ''}
             onChange={(e) => setProfile((p) => ({ ...p, height: parseFloat(e.target.value) || 0 }))}
+            onFocus={(e) => e.target.select()}
             id="profile-height"
           />
           <Input
             label="Age"
             type="number"
-            value={profile.age}
+            value={profile.age || ''}
             onChange={(e) => setProfile((p) => ({ ...p, age: parseInt(e.target.value) || 0 }))}
+            onFocus={(e) => e.target.select()}
             id="profile-age"
           />
 
@@ -236,10 +239,11 @@ export default function ProfilePage() {
             <Input
               label="Daily Calorie Goal (kcal)"
               type="number"
-              value={profile.calorieGoal}
+              value={profile.calorieGoal || ''}
               onChange={(e) =>
                 setProfile((p) => ({ ...p, calorieGoal: parseInt(e.target.value) || 0 }))
               }
+              onFocus={(e) => e.target.select()}
               id="calorie-goal"
             />
           </div>
